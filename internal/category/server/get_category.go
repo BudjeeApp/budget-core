@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"database/sql"
-	"github.com/jee-lee/budget-core/internal/helpers"
-	pb "github.com/jee-lee/budget-core/rpc/category"
+	"github.com/BudjeeApp/budget-core/internal/helpers"
+	pb "github.com/BudjeeApp/budget-core/rpc/category"
 	"github.com/twitchtv/twirp"
 )
 

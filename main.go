@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jee-lee/budget-core/cmd"
+	"github.com/BudjeeApp/budget-core/cmd"
 )
 
 func main() {

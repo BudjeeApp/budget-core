@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/jee-lee/budget-core/internal/category/repository"
-	"github.com/jee-lee/budget-core/internal/config"
+	"github.com/BudjeeApp/budget-core/internal/category/repository"
+	"github.com/BudjeeApp/budget-core/internal/config"
 	"go.uber.org/zap"
 )
 

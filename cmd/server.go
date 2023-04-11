@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/jee-lee/budget-core/internal/category/repository"
-	"github.com/jee-lee/budget-core/internal/category/server"
-	"github.com/jee-lee/budget-core/internal/config"
-	"github.com/jee-lee/budget-core/rpc/category"
+	"github.com/BudjeeApp/budget-core/internal/category/repository"
+	"github.com/BudjeeApp/budget-core/internal/category/server"
+	"github.com/BudjeeApp/budget-core/internal/config"
+	"github.com/BudjeeApp/budget-core/rpc/category"
 	"github.com/spf13/cobra"
 	"net/http"
 )

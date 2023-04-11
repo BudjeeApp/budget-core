@@ -3,10 +3,10 @@ package server
 import (
 	"context"
 	"database/sql"
+	"github.com/BudjeeApp/budget-core/internal/category/mocks"
+	"github.com/BudjeeApp/budget-core/internal/category/repository"
+	pb "github.com/BudjeeApp/budget-core/rpc/category"
 	"github.com/golang/mock/gomock"
-	"github.com/jee-lee/budget-core/internal/category/mocks"
-	"github.com/jee-lee/budget-core/internal/category/repository"
-	pb "github.com/jee-lee/budget-core/rpc/category"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"

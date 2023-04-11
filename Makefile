@@ -96,6 +96,10 @@ clean_services:
 # Mocks
 MOCK_DIR := ./internal/category/mocks
 
+.PHONY: clean_mocks
+clean_mocks:
+	rm -f $(MOCK_DIR)/*
+
 mocks: \
 	$(MOCK_DIR)/mock_repository.go
 

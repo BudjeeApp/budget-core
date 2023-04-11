@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	pb "github.com/jee-lee/budget-core/rpc/category"
+	pb "github.com/BudjeeApp/budget-core/rpc/category"
 	"time"
 )
 
@@ -16,7 +16,7 @@ type Category struct {
 	Allowance        int64          `db:"allowance"`
 	CycleType        string         `db:"cycle_type"`
 	Rollover         bool           `db:"rollover"`
-	JointUserID      sql.NullString `db:"joint_user_id"`
+	LinkedUsersID    sql.NullString `db:"linked_users_id"`
 	CreatedAt        time.Time      `db:"created_at"`
 	UpdatedAt        time.Time      `db:"updated_at"`
 }
@@ -28,7 +28,7 @@ type CategoryCreateRequest struct {
 	Allowance        int64          `db:"allowance"`
 	CycleType        string         `db:"cycle_type"`
 	Rollover         bool           `db:"rollover"`
-	JointUserID      sql.NullString `db:"joint_user_id"`
+	LinkedUsersID    sql.NullString `db:"linked_users_id"`
 }
 
 func (c Category) ToProto() pb.Category {
@@ -40,7 +40,7 @@ func (c Category) ToProto() pb.Category {
 		Allowance:        c.Allowance,
 		CycleType:        cycleTypeToPB(c.CycleType),
 		Rollover:         c.Rollover,
-		JointUserId:      c.JointUserID.String,
+		LinkedUsersId:    c.LinkedUsersID.String,
 		CreatedAt:        c.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:        c.UpdatedAt.Format(time.RFC3339),
 	}
@@ -49,7 +49,7 @@ func (c Category) ToProto() pb.Category {
 func (repo repository) GetCategory(ctx context.Context, id string) (*Category, error) {
 	result := &Category{}
 	statement := `
-		SELECT id, user_id, name, parent_category_id, allowance, cycle_type, rollover, joint_user_id, created_at, updated_at
+		SELECT id, user_id, name, parent_category_id, allowance, cycle_type, rollover, linked_users_id, created_at, updated_at
 		FROM categories
 		WHERE id = $1;
 	`
@@ -64,22 +64,22 @@ func (repo repository) CreateCategory(ctx context.Context, category CategoryCrea
 	if category.ParentCategoryID.String == "" {
 		category.ParentCategoryID.Valid = false
 	}
-	if category.JointUserID.String == "" {
+	if category.LinkedUsersID.String == "" {
 		category.ParentCategoryID.Valid = false
 	}
 	result := &Category{}
-	query := `
+	statement := `
 		INSERT INTO categories
-			(user_id, name, parent_category_id, allowance, cycle_type, rollover, joint_user_id)
+			(user_id, name, parent_category_id, allowance, cycle_type, rollover, linked_users_id)
 		VALUES
 			($1, $2, $3, $4, $5, $6, $7)
 		RETURNING
-			id, user_id, name, parent_category_id, allowance, cycle_type, rollover, joint_user_id, created_at, updated_at
+			id, user_id, name, parent_category_id, allowance, cycle_type, rollover, linked_users_id, created_at, updated_at
 	`
 	err := repo.Pool.QueryRowxContext(
 		ctx,
-		query,
-		category.UserID, category.Name, category.ParentCategoryID, category.Allowance, category.CycleType, category.Rollover, category.JointUserID,
+		statement,
+		category.UserID, category.Name, category.ParentCategoryID, category.Allowance, category.CycleType, category.Rollover, category.LinkedUsersID,
 	).StructScan(result)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create category for user %s: %w", category.UserID, err)

@@ -3,11 +3,11 @@ package server
 import (
 	"context"
 	"database/sql"
+	"github.com/BudjeeApp/budget-core/internal/category/mocks"
+	"github.com/BudjeeApp/budget-core/internal/category/repository"
+	pb "github.com/BudjeeApp/budget-core/rpc/category"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
-	"github.com/jee-lee/budget-core/internal/category/mocks"
-	"github.com/jee-lee/budget-core/internal/category/repository"
-	pb "github.com/jee-lee/budget-core/rpc/category"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -38,6 +38,7 @@ func TestServer_CreateCategory(t *testing.T) {
 			Return(successfulCategory, nil).
 			Times(1)
 		req := &pb.CreateCategoryRequest{
+			UserId:           uuid.NewString(),
 			Name:             "Some Test Name",
 			ParentCategoryId: "dd684402-9638-4576-9fdb-823688f44ff9",
 			Allowance:        60000,
@@ -66,6 +67,7 @@ func TestServer_CreateCategory(t *testing.T) {
 			Return(expectedCategory, nil).
 			Times(1)
 		req := &pb.CreateCategoryRequest{
+			UserId:    uuid.NewString(),
 			Name:      "Some Test Name",
 			CycleType: pb.CycleType_quarterly,
 		}
@@ -74,14 +76,15 @@ func TestServer_CreateCategory(t *testing.T) {
 		assert.Equal(t, "quarterly", resp.CycleType.String())
 	})
 
-	t.Run("should be able to accept only the category name in the request", func(t *testing.T) {
+	t.Run("should be able to accept only the category name and user ID in the request", func(t *testing.T) {
 		mockRepo.
 			EXPECT().
 			CreateCategory(gomock.Any(), gomock.Any()).
 			Return(successfulCategory, nil).
 			Times(1)
 		req := &pb.CreateCategoryRequest{
-			Name: "Successful Category",
+			UserId: uuid.NewString(),
+			Name:   "Successful Category",
 		}
 		_, err := client.CreateCategory(context.Background(), req)
 		assert.NoError(t, err)
@@ -104,7 +107,8 @@ func TestServer_CreateCategory(t *testing.T) {
 		t.Run(tc.TestName, func(t *testing.T) {
 			tc.RepoFunc(mockRepo)
 			req := &pb.CreateCategoryRequest{
-				Name: "Some Category",
+				UserId: uuid.NewString(),
+				Name:   "Some Category",
 			}
 			resp, err := client.CreateCategory(context.Background(), req)
 			assert.Error(t, err)
@@ -116,26 +120,50 @@ func TestServer_CreateCategory(t *testing.T) {
 
 	invalidArgumentTestCases := []struct {
 		TestName              string
+		FieldName             string
 		CreateCategoryRequest *pb.CreateCategoryRequest
 	}{
 		{
-			TestName: "empty Name",
+			TestName:  "empty Name",
+			FieldName: "name",
 			CreateCategoryRequest: &pb.CreateCategoryRequest{
+				UserId:    uuid.NewString(),
 				Allowance: 55000,
 			},
 		},
 		{
-			TestName: "invalid parentCategoryId",
+			TestName:  "empty userId",
+			FieldName: "user_id",
 			CreateCategoryRequest: &pb.CreateCategoryRequest{
+				Name:      "Category Name",
+				Allowance: 55000,
+			},
+		},
+		{
+			TestName:  "invalid userId",
+			FieldName: "user_id",
+			CreateCategoryRequest: &pb.CreateCategoryRequest{
+				UserId:    "123",
+				Name:      "Category Name",
+				Allowance: 55000,
+			},
+		},
+		{
+			TestName:  "invalid parentCategoryId",
+			FieldName: "parent_category_id",
+			CreateCategoryRequest: &pb.CreateCategoryRequest{
+				UserId:           uuid.NewString(),
 				Name:             "Category",
 				ParentCategoryId: "123",
 			},
 		},
 		{
-			TestName: "invalid jointUserId",
+			TestName:  "invalid linkedUsersId",
+			FieldName: "linked_users_id",
 			CreateCategoryRequest: &pb.CreateCategoryRequest{
-				Name:        "Category",
-				JointUserId: "13a6682f-795c-49c1-bfbb-f94f40eef",
+				UserId:        uuid.NewString(),
+				Name:          "Category",
+				LinkedUsersId: "13a6682f-795c-49c1-bfbb-f94f40eef",
 			},
 		},
 	}
@@ -150,6 +178,7 @@ func TestServer_CreateCategory(t *testing.T) {
 			resp, err := client.CreateCategory(context.Background(), req)
 			assert.Error(t, err, "expected an error")
 			assert.Contains(t, err.Error(), "invalid_argument")
+			assert.Contains(t, err.Error(), tc.FieldName)
 			assert.Nil(t, resp)
 		})
 	}

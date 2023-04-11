@@ -3,7 +3,7 @@ package database_seeds
 import (
 	"errors"
 	"fmt"
-	"github.com/jee-lee/budget-core/internal/config"
+	"github.com/BudjeeApp/budget-core/internal/config"
 	"os"
 )
 

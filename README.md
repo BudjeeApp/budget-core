@@ -24,7 +24,7 @@ To get started with contributing in `budget-core`, You'll need to run the follow
 ### Building and Running
 
 * Copy the `SAMPLE.env` to `.env`
-* Run the `postgres` container
+* Run the `postgres` container (`docker compose up -d postgres`)
 * Run `make dev_db`
 * Run `make run_server`
 

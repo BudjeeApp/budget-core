@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/jee-lee/budget-core/internal/config"
+	"github.com/BudjeeApp/budget-core/internal/config"
 	"os"
 
 	"github.com/spf13/cobra"

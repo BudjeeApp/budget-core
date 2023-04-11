@@ -8,8 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
+	repository "github.com/BudjeeApp/budget-core/internal/category/repository"
 	gomock "github.com/golang/mock/gomock"
-	repository "github.com/jee-lee/budget-core/internal/category/repository"
 )
 
 // MockRepository is a mock of Repository interface.

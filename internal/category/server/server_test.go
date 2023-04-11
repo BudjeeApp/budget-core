@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/jee-lee/budget-core/internal/category/repository"
+	"github.com/BudjeeApp/budget-core/internal/category/repository"
 )
 
 var (

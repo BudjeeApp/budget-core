@@ -71,8 +71,8 @@ CREATE FUNCTION public.update_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-	new.updated_at = NOW();
-	RETURN new;
+    new.updated_at = NOW();
+    RETURN new;
 END;
 $$;
 
@@ -90,13 +90,13 @@ CREATE TABLE public.accounts (
     user_id uuid NOT NULL,
     account_type public.account_type NOT NULL,
     name text NOT NULL,
-    is_joint boolean DEFAULT false,
     account_number bigint,
     routing_number bigint,
     initial_balance bigint,
     credit_limit bigint,
     statement_end_date date,
     payment_due_date date,
+    linked_users_id uuid,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -114,21 +114,22 @@ CREATE TABLE public.categories (
     allowance bigint,
     cycle_type public.cycle_type,
     rollover boolean DEFAULT false,
-    joint_user_id uuid,
+    linked_users_id uuid,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
 --
--- Name: joint_accounts; Type: TABLE; Schema: public; Owner: -
+-- Name: linked_users; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.joint_accounts (
+CREATE TABLE public.linked_users (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
-    account_id uuid NOT NULL,
-    owner_id uuid NOT NULL,
-    joint_user_id uuid NOT NULL
+    user_id uuid,
+    linked_user_id uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT linked_users_check CHECK ((user_id <> linked_user_id))
 );
 
 
@@ -146,16 +147,34 @@ CREATE TABLE public.schema_migrations (
 --
 
 CREATE TABLE public.transactions (
-    transaction_date timestamp with time zone DEFAULT now() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
-    budget_id uuid,
+    category_id uuid,
+    transaction_date timestamp with time zone DEFAULT now() NOT NULL,
     description text,
     transaction_type public.transaction_type NOT NULL,
     account_id uuid,
     amount bigint,
     currency public.currency DEFAULT 'USD'::public.currency NOT NULL,
     comment text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.users (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    auth_id uuid NOT NULL,
+    email text NOT NULL,
+    first_name text NOT NULL,
+    last_name text NOT NULL,
+    phone_number text,
+    email_verified boolean DEFAULT false,
+    phone_number_verified boolean DEFAULT false,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -178,11 +197,11 @@ ALTER TABLE ONLY public.categories
 
 
 --
--- Name: joint_accounts joint_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: linked_users linked_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.joint_accounts
-    ADD CONSTRAINT joint_accounts_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.linked_users
+    ADD CONSTRAINT linked_users_pkey PRIMARY KEY (id);
 
 
 --
@@ -202,6 +221,38 @@ ALTER TABLE ONLY public.transactions
 
 
 --
+-- Name: users users_auth_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_auth_id_key UNIQUE (auth_id);
+
+
+--
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
+-- Name: users users_phone_number_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_phone_number_key UNIQUE (phone_number);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: idx_accounts_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -209,10 +260,10 @@ CREATE INDEX idx_accounts_user_id ON public.accounts USING btree (user_id);
 
 
 --
--- Name: idx_categories_joint_user_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_categories_linked_users_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_categories_joint_user_id ON public.categories USING btree (joint_user_id);
+CREATE INDEX idx_categories_linked_users_id ON public.categories USING btree (linked_users_id);
 
 
 --
@@ -230,6 +281,13 @@ CREATE INDEX idx_categories_user_id ON public.categories USING btree (user_id);
 
 
 --
+-- Name: idx_linked_users_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_linked_users_id ON public.linked_users USING btree (id);
+
+
+--
 -- Name: idx_transactions_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -237,10 +295,10 @@ CREATE INDEX idx_transactions_account_id ON public.transactions USING btree (acc
 
 
 --
--- Name: idx_transactions_budget_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_transactions_category_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_transactions_budget_id ON public.transactions USING btree (budget_id);
+CREATE INDEX idx_transactions_category_id ON public.transactions USING btree (category_id);
 
 
 --
@@ -248,6 +306,20 @@ CREATE INDEX idx_transactions_budget_id ON public.transactions USING btree (budg
 --
 
 CREATE INDEX idx_transactions_user_id ON public.transactions USING btree (user_id);
+
+
+--
+-- Name: idx_users_auth_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_auth_id ON public.users USING btree (auth_id);
+
+
+--
+-- Name: idx_users_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_id ON public.users USING btree (id);
 
 
 --
@@ -272,6 +344,37 @@ CREATE TRIGGER update_transaction_updated_at BEFORE UPDATE ON public.transaction
 
 
 --
+-- Name: users update_users_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+
+--
+-- Name: accounts accounts_linked_users_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.accounts
+    ADD CONSTRAINT accounts_linked_users_id_fkey FOREIGN KEY (linked_users_id) REFERENCES public.linked_users(id);
+
+
+--
+-- Name: accounts accounts_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.accounts
+    ADD CONSTRAINT accounts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: categories categories_linked_users_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT categories_linked_users_id_fkey FOREIGN KEY (linked_users_id) REFERENCES public.linked_users(id);
+
+
+--
 -- Name: categories categories_parent_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -280,11 +383,27 @@ ALTER TABLE ONLY public.categories
 
 
 --
--- Name: joint_accounts joint_accounts_account_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: categories categories_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.joint_accounts
-    ADD CONSTRAINT joint_accounts_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.accounts(id);
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT categories_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: linked_users linked_users_linked_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.linked_users
+    ADD CONSTRAINT linked_users_linked_user_id_fkey FOREIGN KEY (linked_user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: linked_users linked_users_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.linked_users
+    ADD CONSTRAINT linked_users_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -296,11 +415,19 @@ ALTER TABLE ONLY public.transactions
 
 
 --
--- Name: transactions transactions_budget_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: transactions transactions_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.transactions
-    ADD CONSTRAINT transactions_budget_id_fkey FOREIGN KEY (budget_id) REFERENCES public.categories(id);
+    ADD CONSTRAINT transactions_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id);
+
+
+--
+-- Name: transactions transactions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.transactions
+    ADD CONSTRAINT transactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -313,4 +440,5 @@ ALTER TABLE ONLY public.transactions
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20230331185737');
+    ('20230331185737'),
+    ('20230409225338');

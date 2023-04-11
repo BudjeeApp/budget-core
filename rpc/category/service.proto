@@ -10,6 +10,7 @@ service CategoryService {
 }
 
 enum CycleType {
+
   monthly = 0;
   weekly = 1;
   quarterly = 2;
@@ -22,15 +23,23 @@ message GetCategoryRequest {
 }
 
 message CreateCategoryRequest {
-  // Required fields
+  // Required field: The user-supplied name of the category, it should allow any characters in the name.
   string name = 1;
-
-  // Optional fields
-  string parent_category_id = 2;
-  int64 allowance = 3;
-  CycleType cycle_type = 4;
-  bool rollover = 5;
-  string joint_user_id = 6;
+  // Required field: The ID of the user requesting to create the category for their budget.
+  string user_id = 2;
+  // Optional field: The category ID that indicates the parent category ID. All transactions under this category will also
+  // count towards its parent.
+  string parent_category_id = 3;
+  // Optional field: The maximum amount of money that can be spent through transactions towards this category.
+  int64 allowance = 4;
+  // Optional field: The duration of the budget cycle. This will reset the allowance under the given timespan.
+  CycleType cycle_type = 5;
+  // Optional field: Indicates if the difference of the actual transaction amount under the given cycle should rollover
+  // to the next cycle. Applies this logic to both a category under spend and over spend.
+  bool rollover = 6;
+  // Optional field: The linked users id. NOT the id of the user who is linked. If present it will share the category details
+  // and transactions under this category to the linked user. This must be present if 
+  string linked_users_id = 7;
 }
 
 message Category {
@@ -41,7 +50,7 @@ message Category {
   int64 allowance = 5;
   CycleType cycle_type = 6;
   bool rollover = 7;
-  string joint_user_id = 8;
+  string linked_users_id = 8;
   string created_at = 9;
   string updated_at = 10;
 }
