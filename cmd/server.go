@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"github.com/BudjeeApp/budget-core/config"
 	"github.com/BudjeeApp/budget-core/internal/category/repository"
 	"github.com/BudjeeApp/budget-core/internal/category/server"
-	"github.com/BudjeeApp/budget-core/internal/config"
 	"github.com/BudjeeApp/budget-core/rpc/category"
 	"github.com/spf13/cobra"
 	"net/http"

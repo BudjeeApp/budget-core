@@ -38,6 +38,7 @@ func (s *Server) CreateCategory(ctx context.Context, req *pb.CreateCategoryReque
 	}
 	createdCategory, err := s.Repo.CreateCategory(ctx, repoCategoryCreateRequest)
 	if err != nil {
+		s.Logger.Error(err.Error())
 		return nil, twirp.InternalError(InternalError)
 	}
 	categoryResponse := createdCategory.ToProto()

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -43,21 +42,7 @@ func configureLogger(appEnv string) {
 		defer Logger.Sync()
 		return
 	}
-
-	rawJSON := []byte(`{
-	  "level": "info",
-	  "encoding": "json",
-	  "encoderConfig": {
-	    "messageKey": "message",
-	    "levelKey": "level",
-	    "levelEncoder": "lowercase"
-	  }
-	}`)
-	var cfg zap.Config
-	if err := json.Unmarshal(rawJSON, &cfg); err != nil {
-		panic(err)
-	}
-	Logger = zap.Must(cfg.Build())
+	Logger = zap.Must(zap.NewProduction())
 	defer Logger.Sync()
 
 }

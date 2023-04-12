@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"github.com/BudjeeApp/budget-core/config"
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 )
 
 type Repository interface {
@@ -11,11 +13,13 @@ type Repository interface {
 }
 
 type repository struct {
-	Pool sqlx.DB
+	Pool   sqlx.DB
+	Logger *zap.Logger
 }
 
 func NewRepository(db sqlx.DB) Repository {
 	return repository{
-		Pool: db,
+		Pool:   db,
+		Logger: config.Logger,
 	}
 }
