@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/BudjeeApp/budget-core/internal/helpers"
 	pb "github.com/BudjeeApp/budget-core/rpc/category"
 	"github.com/twitchtv/twirp"
@@ -19,6 +20,7 @@ func (s *Server) GetCategory(ctx context.Context, req *pb.GetCategoryRequest) (*
 	if err == sql.ErrNoRows {
 		return nil, twirp.NotFoundError("category not found")
 	} else if err != nil {
+		s.Logger.Error(fmt.Sprintf("failed to fetch category %s: %s", req.CategoryId, err.Error()))
 		return nil, twirp.InternalError(InternalError)
 	}
 	categoryResponse := category.ToProto()
