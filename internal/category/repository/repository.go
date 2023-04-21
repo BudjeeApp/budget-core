@@ -8,7 +8,7 @@ import (
 )
 
 type Repository interface {
-	CreateCategory(ctx context.Context, request CategoryCreateRequest) (*Category, error)
+	CreateCategory(ctx context.Context, request Category) (*Category, error)
 	GetCategory(ctx context.Context, id string) (*Category, error)
 }
 

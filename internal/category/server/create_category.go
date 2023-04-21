@@ -27,7 +27,7 @@ func (s *Server) CreateCategory(ctx context.Context, req *pb.CreateCategoryReque
 	if err != nil {
 		return nil, err
 	}
-	repoCategoryCreateRequest := repository.CategoryCreateRequest{
+	repoCategoryCreateRequest := repository.Category{
 		UserID:           req.GetUserId(),
 		Name:             req.GetName(),
 		ParentCategoryID: parentCategoryId,
