@@ -36,7 +36,7 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // CreateCategory mocks base method.
-func (m *MockRepository) CreateCategory(ctx context.Context, request repository.CategoryCreateRequest) (*repository.Category, error) {
+func (m *MockRepository) CreateCategory(ctx context.Context, request repository.Category) (*repository.Category, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateCategory", ctx, request)
 	ret0, _ := ret[0].(*repository.Category)

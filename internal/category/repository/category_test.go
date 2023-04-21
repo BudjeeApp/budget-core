@@ -17,7 +17,7 @@ func TestRepository_CreateCategory(t *testing.T) {
 		setupTest(t)
 		defer teardownTest(t)
 		user := test.SeedUser(t)
-		req := CategoryCreateRequest{
+		req := Category{
 			UserID:    user.ID,
 			Name:      "testName",
 			CycleType: "monthly",
@@ -32,7 +32,7 @@ func TestRepository_CreateCategory(t *testing.T) {
 		t.Skip("Need to add linked users stuff")
 		setupTest(t)
 		defer teardownTest(t)
-		parentCategoryRequest := CategoryCreateRequest{
+		parentCategoryRequest := Category{
 			UserID:    uuid.NewString(),
 			Name:      "testName",
 			CycleType: "monthly",
@@ -40,7 +40,7 @@ func TestRepository_CreateCategory(t *testing.T) {
 		parentCategory, err := repo.CreateCategory(context.Background(), parentCategoryRequest)
 		assert.NoError(err)
 
-		subCategoryRequest := CategoryCreateRequest{
+		subCategoryRequest := Category{
 			UserID:           uuid.NewString(),
 			Name:             "Sub Category",
 			ParentCategoryID: parentCategory.ParentCategoryID,
@@ -63,7 +63,7 @@ func TestRepository_CreateCategory(t *testing.T) {
 	t.Run("should require an existing user ID", func(t *testing.T) {
 		setupTest(t)
 		defer teardownTest(t)
-		req := CategoryCreateRequest{
+		req := Category{
 			UserID:    uuid.NewString(),
 			Name:      "testName",
 			CycleType: "monthly",
@@ -77,7 +77,7 @@ func TestRepository_CreateCategory(t *testing.T) {
 		setupTest(t)
 		defer teardownTest(t)
 		user := test.SeedUser(t)
-		req := CategoryCreateRequest{
+		req := Category{
 			UserID:           user.ID,
 			Name:             "Nonexistent Parent Category",
 			ParentCategoryID: sql.NullString{String: uuid.NewString(), Valid: true},

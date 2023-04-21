@@ -21,16 +21,6 @@ type Category struct {
 	UpdatedAt        time.Time      `db:"updated_at"`
 }
 
-type CategoryCreateRequest struct {
-	UserID           string         `db:"user_id"`
-	Name             string         `db:"name"`
-	ParentCategoryID sql.NullString `db:"parent_category_id"`
-	Allowance        int64          `db:"allowance"`
-	CycleType        string         `db:"cycle_type"`
-	Rollover         bool           `db:"rollover"`
-	LinkedUsersID    sql.NullString `db:"linked_users_id"`
-}
-
 func (c Category) ToProto() pb.Category {
 	return pb.Category{
 		Id:               c.ID,
@@ -44,8 +34,8 @@ func (c Category) ToProto() pb.Category {
 		CreatedAt:        c.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:        c.UpdatedAt.Format(time.RFC3339),
 	}
-}
 
+}
 func (repo repository) GetCategory(ctx context.Context, id string) (*Category, error) {
 	result := &Category{}
 	statement := `
@@ -60,7 +50,7 @@ func (repo repository) GetCategory(ctx context.Context, id string) (*Category, e
 	return result, nil
 }
 
-func (repo repository) CreateCategory(ctx context.Context, category CategoryCreateRequest) (*Category, error) {
+func (repo repository) CreateCategory(ctx context.Context, category Category) (*Category, error) {
 	if category.ParentCategoryID.String == "" {
 		category.ParentCategoryID.Valid = false
 	}
